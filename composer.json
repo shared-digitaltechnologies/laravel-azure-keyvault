@@ -1,16 +1,16 @@
 {
     "name": "shrd/laravel-azure-keyvault",
     "version": "0.1.0",
-    "description": "Generated Composer Package",
+    "description": "Adds Azure KeyVault support to Laravel.",
     "license": "proprietary",
-    "keywords": [],
+    "keywords": ["laravel", "azure", "azure-keyvault"],
     "readme": "README.md",
     "require": {
         "php": ">= 8.2",
         "paragonie/constant_time_encoding": "^2.6",
         "thecodingmachine/safe": "^2.5.0",
         "illuminate/contracts": "^10.0",
-        "shrd/laravel-azure-credentials": "*"
+        "shrd/laravel-azure-identity": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.5",
