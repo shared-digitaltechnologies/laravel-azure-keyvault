@@ -63,11 +63,11 @@ class KeyVaultService
     {
         $reference = KeyVaultReference::from($reference);
         if($reference instanceof KeyVaultSecretReference) {
-            return new Secret($this->client, $reference);
+            return new Secret($this->client(), $reference);
         } elseif ($reference instanceof KeyVaultKeyReference) {
-            return new Key($this->client, $reference);
+            return new Key($this->client(), $reference);
         } elseif ($reference instanceof KeyVaultCertificateReference) {
-            return new Certificate($this->client, $reference);
+            return new Certificate($this->client(), $reference);
         } else {
             throw new InvalidArgumentException(self::class."::get(".get_debug_type($reference).") not implemented.");
         }
@@ -76,14 +76,14 @@ class KeyVaultService
     public function certificate($reference): Certificate
     {
         $reference = KeyVaultCertificateReference::from($reference);
-        return new Certificate($this->client, $reference);
+        return new Certificate($this->client(), $reference);
     }
 
     public function secret($reference): Secret
     {
         $reference = KeyVaultReference::from($reference);
         if($reference instanceof KeyVaultSecretReference) {
-            return new Secret($this->client, $reference);
+            return new Secret($this->client(), $reference);
         } elseif ($reference instanceof KeyVaultCertificateReference) {
             return $this->certificate($reference)->getSecret();
         } else {
@@ -95,7 +95,7 @@ class KeyVaultService
     {
         $reference = KeyVaultReference::from($reference);
         if($reference instanceof KeyVaultKeyReference) {
-            return new Key($this->client, $reference);
+            return new Key($this->client(), $reference);
         } elseif ($reference instanceof KeyVaultSecretReference) {
             return $this->secret($reference)->getKey();
         } elseif ($reference instanceof KeyVaultCertificateReference) {
