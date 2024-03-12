@@ -1,6 +1,6 @@
 {
     "name": "shrd/laravel-azure-keyvault",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "description": "Adds Azure KeyVault support to Laravel.",
     "license": "proprietary",
     "keywords": ["laravel", "azure", "azure-keyvault"],
