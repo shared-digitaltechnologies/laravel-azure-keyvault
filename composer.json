@@ -10,7 +10,7 @@
         "paragonie/constant_time_encoding": "^2.6",
         "thecodingmachine/safe": "^2.5.0",
         "illuminate/contracts": "^10.0",
-        "shrd/laravel-azure-identity": "0.2.1"
+        "shrd/laravel-azure-identity": "0.2.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.5",
