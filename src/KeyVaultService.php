@@ -3,6 +3,7 @@
 namespace Shrd\Laravel\Azure\KeyVault;
 
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
@@ -18,88 +19,115 @@ use Shrd\Laravel\Azure\KeyVault\References\KeyVaultSecretReference;
 
 class KeyVaultService
 {
-    protected ?KeyVaultClient $client = null;
+    /**
+     * @var array<string, KeyVaultClient>
+     */
+    protected array $clients = [];
+
+    protected string $defaultCredential;
+
+    protected bool $cacheEnabled;
+    protected ?string $cacheStore;
+    protected mixed $cacheTtl;
+    protected string $cachePrefix;
 
     public function __construct(protected AzureCredentialService $credential,
                                 protected ?ConfigRepository $config = null,
                                 protected ?CacheFactory $cacheFactory = null)
     {
+        $this->defaultCredential = $config?->get('azure-keyvault.credential')
+            ?? $this->credential->getDefaultCredential();
+
+        $this->cacheEnabled = $config?->get('azure-keyvault.cache.enabled') ?? true;
+        $this->cacheStore = $config?->get('azure-keyvault.cache.store');
+        $this->cacheTtl = $config?->get('azure-keyvault.cache.ttl') ?? '1 hour';
+        $this->cachePrefix = $config?->get('azure-keyvault.cache.prefix') ?? 'azure_keyvault:';
     }
 
-    public function client(): KeyVaultClient
+    protected function getCacheRepository(): ?CacheRepository
     {
-        if(!$this->client) {
-            $this->client = new KeyVaultClient(
-                credential: $this->credential->credential($this->config?->get('azure-keyvault.credential_driver')),
-                cache: $this->cacheFactory?->store($this->config?->get('azure-keyvault.cache.store')),
-                cacheTTL: $this->config?->get('azure-keyvault.cache.ttl') ?? '1 hour',
-                cachePrefix: $this->config?->get('azure-keyvault.cache.prefix') ?? 'azure_keyvault:',
-            );
-        }
-        return $this->client;
+        if(!$this->cacheEnabled) return null;
+        return $this->cacheFactory?->store($this->cacheStore);
     }
 
-    public function resolve($value): mixed
+    public function client(?string $credential = null): KeyVaultClient
+    {
+        $credential ??= $this->defaultCredential;
+        if(array_key_exists($credential, $this->clients)) {
+            return $this->clients[$credential];
+        }
+
+        $client = new KeyVaultClient(
+            credential: $this->credential->credential($credential),
+            cache: $this->getCacheRepository(),
+            cacheTTL: $this->cacheTtl,
+            cachePrefix: $this->cachePrefix,
+        );
+        $this->clients[$credential] = $client;
+        return $client;
+    }
+
+    public function resolve($value, ?string $credential = null): mixed
     {
         if(KeyVaultReference::isKeyVaultReferenceString($value)) {
             $value = KeyVaultReference::from($value);
         }
 
-        if($value instanceof KeyVaultReference) return $this->get($value)->getResolvedValue();
+        if($value instanceof KeyVaultReference) return $this->get($value, $credential)->getResolvedValue();
         return $value;
     }
 
-    public function resolveKeys(array &$values, array $keys): array
+    public function resolveKeys(array &$values, array $keys, ?string $credential = null): array
     {
         foreach ($keys as $key) {
             if(Arr::has($values, $key)) {
-                Arr::set($values, $key, $this->resolve(Arr::get($values, $key)));
+                Arr::set($values, $key, $this->resolve(Arr::get($values, $key), $credential));
             }
         }
         return $values;
     }
 
-    public function get($reference): Certificate|Secret|Key
+    public function get($reference, ?string $credential = null): Certificate|Secret|Key
     {
         $reference = KeyVaultReference::from($reference);
         if($reference instanceof KeyVaultSecretReference) {
-            return new Secret($this->client(), $reference);
+            return new Secret($this->client($credential), $reference);
         } elseif ($reference instanceof KeyVaultKeyReference) {
-            return new Key($this->client(), $reference);
+            return new Key($this->client($credential), $reference);
         } elseif ($reference instanceof KeyVaultCertificateReference) {
-            return new Certificate($this->client(), $reference);
+            return new Certificate($this->client($credential), $reference);
         } else {
             throw new InvalidArgumentException(self::class."::get(".get_debug_type($reference).") not implemented.");
         }
     }
 
-    public function certificate($reference): Certificate
+    public function certificate($reference, ?string $credential = null): Certificate
     {
         $reference = KeyVaultCertificateReference::from($reference);
-        return new Certificate($this->client(), $reference);
+        return new Certificate($this->client($credential), $reference);
     }
 
-    public function secret($reference): Secret
+    public function secret($reference, ?string $credential = null): Secret
     {
         $reference = KeyVaultReference::from($reference);
         if($reference instanceof KeyVaultSecretReference) {
-            return new Secret($this->client(), $reference);
+            return new Secret($this->client($credential), $reference);
         } elseif ($reference instanceof KeyVaultCertificateReference) {
-            return $this->certificate($reference)->getSecret();
+            return $this->certificate($reference, $credential)->getSecret();
         } else {
             throw new InvalidArgumentException("Could not create a Secret-client from ".$reference->toReferenceString());
         }
     }
 
-    public function key($reference): Key
+    public function key($reference, ?string $credential = null): Key
     {
         $reference = KeyVaultReference::from($reference);
         if($reference instanceof KeyVaultKeyReference) {
-            return new Key($this->client(), $reference);
+            return new Key($this->client($credential), $reference);
         } elseif ($reference instanceof KeyVaultSecretReference) {
-            return $this->secret($reference)->getKey();
+            return $this->secret($reference, $credential)->getKey();
         } elseif ($reference instanceof KeyVaultCertificateReference) {
-            return $this->certificate($reference)->getKey();
+            return $this->certificate($reference, $credential)->getKey();
         } else {
             throw new InvalidArgumentException("Could not create a Key-client from ". $reference->toReferenceString());
         }

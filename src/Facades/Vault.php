@@ -12,13 +12,13 @@ use Shrd\Laravel\Azure\KeyVault\KeyVaultService;
 /**
  * Access the Azure KeyVault.
  *
- * @method static KeyVaultClient client()
- * @method static mixed resolve($value)
- * @method static array resolveKeys(array &$values, array $keys)
- * @method static Key|Certificate|Secret get($reference)
- * @method static Key key($reference)
- * @method static Certificate certificate($reference)
- * @method static Secret secret($reference)
+ * @method static KeyVaultClient client(?string $credential = null)
+ * @method static mixed resolve($value, ?string $credential = null)
+ * @method static array resolveKeys(array &$values, array $keys, ?string $credential = null)
+ * @method static Key|Certificate|Secret get($reference, ?string $credential = null)
+ * @method static Key key($reference, ?string $credential = null)
+ * @method static Certificate certificate($reference, ?string $credential = null)
+ * @method static Secret secret($reference, ?string $credential = null)
  */
 class Vault extends Facade
 {

@@ -11,7 +11,7 @@ return [
      */
 
     // The name of the credential driver used to get access tokens for the key vault.
-    "credential_driver" => env('AZURE_KEYVAULT_CREDENTIAL_DRIVER'),
+    "credential" => env('AZURE_KEYVAULT_CREDENTIAL'),
 
 
     /* -----------------------------------------------------------------
@@ -23,6 +23,8 @@ return [
      */
 
     "cache" => [
+        // Whether to enable the keyvault cache.
+        "enabled" => env('AZURE_KEYVAULT_CACHE_ENABLED', true),
         // The cache store used to cache the key vault data. No value means the default store.
         "store" => env('AZURE_KEYVAULT_CACHE_STORE'),
         // Prefix for all key vault cache items.

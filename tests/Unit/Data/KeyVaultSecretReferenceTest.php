@@ -3,7 +3,7 @@
 namespace Shrd\Laravel\Azure\KeyVault\Tests\Unit\Data;
 
 use Shrd\Laravel\Azure\KeyVault\References\KeyVaultSecretReference;
-use Shrd\Laravel\Azure\Storage\Tests\TestCase;
+use Shrd\Laravel\Azure\KeyVault\Tests\TestCase;
 
 class KeyVaultSecretReferenceTest extends TestCase
 {
