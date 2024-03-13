@@ -7,6 +7,7 @@ use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
+use Psr\Http\Message\UriFactoryInterface;
 use Shrd\Laravel\Azure\Identity\AzureCredentialService;
 use Shrd\Laravel\Azure\KeyVault\Clients\Certificate;
 use Shrd\Laravel\Azure\KeyVault\Clients\Key;
@@ -32,6 +33,7 @@ class KeyVaultService
     protected string $cachePrefix;
 
     public function __construct(protected AzureCredentialService $credential,
+                                protected UriFactoryInterface $uriFactory,
                                 protected ?ConfigRepository $config = null,
                                 protected ?CacheFactory $cacheFactory = null)
     {
@@ -70,7 +72,7 @@ class KeyVaultService
     public function resolve($value, ?string $credential = null): mixed
     {
         if(KeyVaultReference::isKeyVaultReferenceString($value)) {
-            $value = KeyVaultReference::from($value);
+            $value = KeyVaultReference::from($value, $this->uriFactory);
         }
 
         if($value instanceof KeyVaultReference) return $this->get($value, $credential)->getResolvedValue();
@@ -87,9 +89,14 @@ class KeyVaultService
         return $values;
     }
 
+    public function reference($reference): KeyVaultReference
+    {
+        return KeyVaultReference::from($reference, $this->uriFactory);
+    }
+
     public function get($reference, ?string $credential = null): Certificate|Secret|Key
     {
-        $reference = KeyVaultReference::from($reference);
+        $reference = KeyVaultReference::from($reference, $this->uriFactory);
         if($reference instanceof KeyVaultSecretReference) {
             return new Secret($this->client($credential), $reference);
         } elseif ($reference instanceof KeyVaultKeyReference) {
@@ -101,15 +108,25 @@ class KeyVaultService
         }
     }
 
+    public function certificateReference($reference): KeyVaultCertificateReference
+    {
+        return KeyVaultCertificateReference::from($reference, $this->uriFactory);
+    }
+
     public function certificate($reference, ?string $credential = null): Certificate
     {
-        $reference = KeyVaultCertificateReference::from($reference);
+        $reference = KeyVaultCertificateReference::from($reference, $this->uriFactory);
         return new Certificate($this->client($credential), $reference);
+    }
+
+    public function secretReference($reference): KeyVaultSecretReference
+    {
+        return KeyVaultSecretReference::from($reference, $this->uriFactory);
     }
 
     public function secret($reference, ?string $credential = null): Secret
     {
-        $reference = KeyVaultReference::from($reference);
+        $reference = KeyVaultReference::from($reference, $this->uriFactory);
         if($reference instanceof KeyVaultSecretReference) {
             return new Secret($this->client($credential), $reference);
         } elseif ($reference instanceof KeyVaultCertificateReference) {
@@ -119,9 +136,14 @@ class KeyVaultService
         }
     }
 
+    public function keyReference($reference): KeyVaultKeyReference
+    {
+        return KeyVaultKeyReference::from($reference, $this->uriFactory);
+    }
+
     public function key($reference, ?string $credential = null): Key
     {
-        $reference = KeyVaultReference::from($reference);
+        $reference = KeyVaultReference::from($reference, $this->uriFactory);
         if($reference instanceof KeyVaultKeyReference) {
             return new Key($this->client($credential), $reference);
         } elseif ($reference instanceof KeyVaultSecretReference) {

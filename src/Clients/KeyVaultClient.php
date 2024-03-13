@@ -7,10 +7,10 @@ use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
-use ParagonIE\ConstantTime\Base64UrlSafe;
 use Psr\Http\Message\UriInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 use Safe\Exceptions\JsonException;
+use Shrd\EncodingCombinators\Strings\ConstantTime\Base64Url;
 use Shrd\Laravel\Azure\Identity\Contracts\TokenCredential;
 use Shrd\Laravel\Azure\Identity\Exceptions\AzureCredentialException;
 use Shrd\Laravel\Azure\Identity\Scopes\AzureScope;
@@ -239,7 +239,7 @@ class KeyVaultClient
      */
     public function sign(KeyVaultKeyReference $reference, string $alg, string $digest): SignResponse
     {
-        $value = Base64UrlSafe::encodeUnpadded(hash('sha256', $digest, true));
+        $value = Base64Url::encodeNoPadding(hash('sha256', $digest, true));
         $response = $this->request()->post($reference->getSignUri(), [
             "alg" => $alg,
             "value" => $value,
@@ -258,7 +258,7 @@ class KeyVaultClient
                            string               $digest,
                            string               $signature): bool
     {
-        $digest = Base64UrlSafe::encodeUnpadded(hash('sha256', $digest, true));
+        $digest = Base64Url::encodeNoPadding(hash('sha256', $digest, true));
 
         $response = $this->request()->post($reference->getVerifyUri(), [
             "alg" => $alg,

@@ -2,7 +2,7 @@
 
 namespace Shrd\Laravel\Azure\KeyVault\References;
 
-use GuzzleHttp\Psr7\Uri;
+use Http\Discovery\Psr17FactoryDiscovery;
 use InvalidArgumentException;
 use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
@@ -30,8 +30,8 @@ abstract readonly class KeyVaultReference implements UriInterface
     public static function fromUri(string|UriInterface $uri, ?UriFactoryInterface $uriFactory = null): self
     {
         if(is_string($uri)) {
-            if($uriFactory) $uri = $uriFactory->createUri($uri);
-            else $uri = new Uri($uri);
+            $uriFactory ??= Psr17FactoryDiscovery::findUriFactory();
+            $uri = $uriFactory->createUri($uri);
         }
 
         $path = $uri->getPath();
@@ -39,40 +39,40 @@ abstract readonly class KeyVaultReference implements UriInterface
         $firstPart = $pathParts[0] === '' ? ($pathParts[1] ?? 'unknown') : $pathParts[0];
 
         return match ($firstPart) {
-            'keys' => KeyVaultKeyReference::fromUri($uri),
-            'secrets' => KeyVaultSecretReference::fromUri($uri),
-            'certificates' => KeyVaultCertificateReference::fromUri($uri),
+            'keys' => KeyVaultKeyReference::fromUri($uri, $uriFactory),
+            'secrets' => KeyVaultSecretReference::fromUri($uri, $uriFactory),
+            'certificates' => KeyVaultCertificateReference::fromUri($uri, $uriFactory),
             default => throw new InvalidArgumentException("Unknown KeyVault entity at path '$firstPart'."),
         };
     }
 
-    public static function fromProperties(array $properties): self
+    public static function fromProperties(array $properties, ?UriFactoryInterface $uriFactory = null): self
     {
         if(array_key_exists('SecretUri', $properties) || array_key_exists('SecretName', $properties)) {
-            return KeyVaultSecretReference::fromProperties($properties);
+            return KeyVaultSecretReference::fromProperties($properties, $uriFactory);
         } elseif (array_key_exists('KeyUri', $properties) || array_key_exists('KeyName', $properties)) {
-            return KeyVaultKeyReference::fromProperties($properties);
+            return KeyVaultKeyReference::fromProperties($properties, $uriFactory);
         } elseif (array_key_exists('CertificateUri', $properties) || array_key_exists('CertificateName', $properties)) {
-            return KeyVaultCertificateReference::fromProperties($properties);
+            return KeyVaultCertificateReference::fromProperties($properties, $uriFactory);
         } else {
             $propertyList = "'".implode("', '", array_keys($properties))."'";
             throw new InvalidArgumentException("Could not construct KeyVaultReference from $propertyList");
         }
     }
 
-    public static function fromString(string $value): self
+    public static function fromString(string $value, ?UriFactoryInterface $uriFactory = null): self
     {
         $values = self::parseKeyVaultReferenceString($value);
-        if($values === null) return self::fromUri($value);
-        return self::fromProperties($values);
+        if($values === null) return self::fromUri($value, $uriFactory);
+        return self::fromProperties($values, $uriFactory);
     }
 
-    public static function from(string|UriInterface|array|self $value): self
+    public static function from(string|UriInterface|array|self $value, ?UriFactoryInterface $uriFactory = null): self
     {
         if($value instanceof self) return $value;
-        if($value instanceof UriInterface) return self::fromUri($value);
-        if(is_array($value)) return self::fromProperties($value);
-        return self::fromString($value);
+        if($value instanceof UriInterface) return self::fromUri($value, $uriFactory);
+        if(is_array($value)) return self::fromProperties($value, $uriFactory);
+        return self::fromString($value, $uriFactory);
     }
 
     public static function isKeyVaultReferenceString(string $value): bool

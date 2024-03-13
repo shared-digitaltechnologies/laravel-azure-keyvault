@@ -3,7 +3,7 @@
 namespace Shrd\Laravel\Azure\KeyVault\Tokens;
 
 use Illuminate\Http\Client\RequestException;
-use ParagonIE\ConstantTime\Base64UrlSafe;
+use Shrd\EncodingCombinators\Strings\ConstantTime\Base64Url;
 use Shrd\Laravel\Azure\Identity\Exceptions\AzureCredentialException;
 use Shrd\Laravel\Azure\KeyVault\Clients\Certificate;
 
@@ -28,8 +28,8 @@ readonly class CertificateTokenBuilder
      */
     public function createTokenWithPayload(array $payload): string
     {
-        $header = Base64UrlSafe::encodeUnpadded(json_encode($this->getTokenHeader()));
-        $payload = Base64UrlSafe::encodeUnpadded(json_encode($payload));
+        $header = Base64Url::encodeNoPadding(json_encode($this->getTokenHeader()));
+        $payload = Base64Url::encodeNoPadding(json_encode($payload));
         $digest = "$header.$payload";
         $signature = $this->certificate->sign($this->alg, $digest);
         return "$digest.$signature";

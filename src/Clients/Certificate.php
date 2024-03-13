@@ -3,6 +3,7 @@
 namespace Shrd\Laravel\Azure\KeyVault\Clients;
 
 use Illuminate\Http\Client\RequestException;
+use Psr\SimpleCache\InvalidArgumentException;
 use Shrd\Laravel\Azure\Identity\Exceptions\AzureCredentialException;
 use Shrd\Laravel\Azure\KeyVault\Data\CertificateData;
 use Shrd\Laravel\Azure\KeyVault\References\KeyVaultCertificateReference;
@@ -15,6 +16,11 @@ use Shrd\Laravel\Azure\KeyVault\References\KeyVaultSecretReference;
  */
 class Certificate extends EntityClient
 {
+    /**
+     * @throws RequestException
+     * @throws AzureCredentialException
+     * @throws InvalidArgumentException
+     */
     protected function fetchData(): CertificateData
     {
         return $this->client->getCertificateData($this->reference);
