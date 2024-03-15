@@ -2,14 +2,18 @@
     "name": "shrd/laravel-azure-keyvault",
     "description": "Adds Azure KeyVault support to Laravel.",
     "license": "proprietary",
-    "keywords": ["laravel", "azure", "azure-keyvault"],
+    "keywords": [
+        "laravel",
+        "azure",
+        "azure-keyvault"
+    ],
     "readme": "README.md",
     "require": {
         "php": ">= 8.2",
         "thecodingmachine/safe": "^2.5.0",
         "illuminate/contracts": "^10.0",
-        "shrd/laravel-azure-identity": "^0.3.0",
-        "shrd/php-encoding-combinators": "^0.3.0",
+        "shrd/laravel-azure-identity": "^0.4",
+        "shrd/php-encoding-combinators": "^0.4",
         "php-http/discovery": "^1.11"
     },
     "require-dev": {
@@ -36,7 +40,9 @@
     },
     "extra": {
         "laravel": {
-            "providers": ["Shrd\\Laravel\\Azure\\KeyVault\\ServiceProvider"],
+            "providers": [
+                "Shrd\\Laravel\\Azure\\KeyVault\\ServiceProvider"
+            ],
             "aliases": {
                 "Vault": "Shrd\\Laravel\\Azure\\KeyVault\\Facades\\Vault"
             }
