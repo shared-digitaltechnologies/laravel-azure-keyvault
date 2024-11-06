@@ -12,8 +12,8 @@
         "php": ">= 8.2",
         "thecodingmachine/safe": "^2.5.0",
         "illuminate/contracts": "^11.0",
-        "shrd/laravel-azure-identity": "^0.5.1",
-        "shrd/php-encoding-combinators": "^0.5.1",
+        "shrd/laravel-azure-identity": "^0.5.2",
+        "shrd/php-encoding-combinators": "^0.5.2",
         "php-http/discovery": "^1.11"
     },
     "require-dev": {
